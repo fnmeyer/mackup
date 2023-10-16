@@ -1,10 +1,9 @@
 name: Run tests
 on:
   - pull_request
-  - push
+  # - push
 
 jobs:
-
   nose-2_7:
     runs-on: ubuntu-latest
     container: python:2.7

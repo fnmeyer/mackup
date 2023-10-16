@@ -1,10 +1,9 @@
 name: Lint Markdown
 on:
   - pull_request
-  - push
+  # - push
 
 jobs:
-
   mdl:
     runs-on: ubuntu-latest
     container: rsrchboy/mdl

@@ -3,7 +3,7 @@
 # See <https://stackoverflow.com/a/729795>
 on:
   - pull_request
-  - push
+  # - push
 name: linelint
 jobs:
   linelint:
