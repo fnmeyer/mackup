@@ -73,13 +73,9 @@ class ApplicationProfile(object):
                 and os.path.samefile(home_filepath, mackup_filepath)
             ):
                 if self.verbose:
-                    print(
-                        "Backing up\n  {}\n  to\n  {} ...".format(
-                            home_filepath, mackup_filepath
-                        )
-                    )
+                    print(f"Backing up\n  {home_filepath}\n  to\n  {mackup_filepath} ...")
                 else:
-                    print("Backing up {} ...".format(filename))
+                    print(f"Backing up {filename} ...")
 
                 if self.dry_run:
                     continue
@@ -94,13 +90,11 @@ class ApplicationProfile(object):
                     elif os.path.islink(mackup_filepath):
                         file_type = "link"
                     else:
-                        raise ValueError("Unsupported file: {}".format(mackup_filepath))
+                        raise ValueError(f"Unsupported file: {mackup_filepath}")
 
                     # Ask the user if he really wants to replace it
                     if utils.confirm(
-                        "A {} named {} already exists in the"
-                        " backup.\nAre you sure that you want to"
-                        " replace it?".format(file_type, mackup_filepath)
+                        f"A {file_type} named {mackup_filepath} already exists in the backup.\nAre you sure that you want to replace it?"
                     ):
                         # Delete the file in Mackup
                         utils.delete(mackup_filepath)
@@ -120,20 +114,14 @@ class ApplicationProfile(object):
             elif self.verbose:
                 if os.path.exists(home_filepath):
                     print(
-                        "Doing nothing\n  {}\n  "
-                        "is already backed up to\n  {}".format(
-                            home_filepath, mackup_filepath
-                        )
+                        f"Doing nothing\n  {home_filepath}\n  is already backed up to\n  {mackup_filepath}"
                     )
                 elif os.path.islink(home_filepath):
                     print(
-                        "Doing nothing\n  {}\n  "
-                        "is a broken link, you might want to fix it.".format(
-                            home_filepath
-                        )
+                        f"Doing nothing\n  {home_filepath}\n  is a broken link, you might want to fix it."
                     )
                 else:
-                    print("Doing nothing\n  {}\n  does not exist".format(home_filepath))
+                    print(f"Doing nothing\n  {home_filepath}\n  does not exist")
 
     def restore(self):
         """
@@ -168,13 +156,9 @@ class ApplicationProfile(object):
 
             if file_or_dir_exists and not pointing_to_mackup and supported:
                 if self.verbose:
-                    print(
-                        "Restoring\n  linking {}\n  to      {} ...".format(
-                            home_filepath, mackup_filepath
-                        )
-                    )
+                    print(f"Restoring\n  linking {home_filepath}\n  to      {mackup_filepath} ...")
                 else:
-                    print("Restoring {} ...".format(filename))
+                    print(f"Restoring {filename} ...")
 
                 if self.dry_run:
                     continue
@@ -189,12 +173,10 @@ class ApplicationProfile(object):
                     elif os.path.islink(home_filepath):
                         file_type = "link"
                     else:
-                        raise ValueError("Unsupported file: {}".format(mackup_filepath))
+                        raise ValueError(f"Unsupported file: {mackup_filepath}")
 
                     if utils.confirm(
-                        "You already have a {} named {} in your"
-                        " home.\nDo you want to replace it with"
-                        " your backup?".format(file_type, filename)
+                        f"You already have a {file_type} named {filename} in your home.\nDo you want to replace it with your backup?"
                     ):
                         utils.delete(home_filepath)
                         utils.link(mackup_filepath, home_filepath)
@@ -203,21 +185,14 @@ class ApplicationProfile(object):
             elif self.verbose:
                 if os.path.exists(home_filepath):
                     print(
-                        "Doing nothing\n  {}\n  already linked by\n  {}".format(
-                            mackup_filepath, home_filepath
-                        )
+                        f"Doing nothing\n  {mackup_filepath}\n  already linked by\n  {home_filepath}"
                     )
                 elif os.path.islink(home_filepath):
                     print(
-                        "Doing nothing\n  {}\n  "
-                        "is a broken link, you might want to fix it.".format(
-                            home_filepath
-                        )
+                        f"Doing nothing\n  {home_filepath}\n  is a broken link, you might want to fix it."
                     )
                 else:
-                    print(
-                        "Doing nothing\n  {}\n  does not exist".format(mackup_filepath)
-                    )
+                    print(f"Doing nothing\n  {mackup_filepath}\n  does not exist")
 
     def uninstall(self):
         """
@@ -243,13 +218,9 @@ class ApplicationProfile(object):
                 # Check if there is a corresponding file in the home folder
                 if os.path.exists(home_filepath):
                     if self.verbose:
-                        print(
-                            "Reverting {}\n  at {} ...".format(
-                                mackup_filepath, home_filepath
-                            )
-                        )
+                        print(f"Reverting {mackup_filepath}\n  at {home_filepath} ...")
                     else:
-                        print("Reverting {} ...".format(filename))
+                        print(f"Reverting {filename} ...")
 
                     if self.dry_run:
                         continue
@@ -261,4 +232,4 @@ class ApplicationProfile(object):
                     # Copy the Dropbox file to the home folder
                     utils.copy(mackup_filepath, home_filepath)
             elif self.verbose:
-                print("Doing nothing, {} does not exist".format(mackup_filepath))
+                print(f"Doing nothing, {mackup_filepath} does not exist")

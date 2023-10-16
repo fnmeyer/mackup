@@ -49,27 +49,21 @@ class ApplicationsDatabase(object):
                 if config.has_section("configuration_files"):
                     for path in config.options("configuration_files"):
                         if path.startswith("/"):
-                            raise ValueError(
-                                "Unsupported absolute path: {}".format(path)
-                            )
+                            raise ValueError(f"Unsupported absolute path: {path}")
                         self.apps[app_name]["configuration_files"].add(path)
 
                 # Add the XDG configuration files to sync
                 home = os.path.expanduser("~/")
-                failobj = "{}.config".format(home)
+                failobj = f"{home}.config"
                 xdg_config_home = os.environ.get("XDG_CONFIG_HOME", failobj)
                 if not xdg_config_home.startswith(home):
                     raise ValueError(
-                        "$XDG_CONFIG_HOME: {} must be "
-                        "somewhere within your home "
-                        "directory: {}".format(xdg_config_home, home)
+                        f"$XDG_CONFIG_HOME: {xdg_config_home} must be somewhere within your home directory: {home}"
                     )
                 if config.has_section("xdg_configuration_files"):
                     for path in config.options("xdg_configuration_files"):
                         if path.startswith("/"):
-                            raise ValueError(
-                                "Unsupported absolute path: " "{}".format(path)
-                            )
+                            raise ValueError(f"Unsupported absolute path: {path}")
                         path = os.path.join(xdg_config_home, path)
                         path = path.replace(home, "")
                         (self.apps[app_name]["configuration_files"].add(path))
@@ -150,11 +144,7 @@ class ApplicationsDatabase(object):
         Returns:
             set of str.
         """
-        app_names = set()
-        for name in self.apps:
-            app_names.add(name)
-
-        return app_names
+        return set(self.apps)
 
     def get_pretty_app_names(self):
         """
@@ -163,8 +153,4 @@ class ApplicationsDatabase(object):
         Returns:
             set of str.
         """
-        pretty_app_names = set()
-        for app_name in self.get_app_names():
-            pretty_app_names.add(self.get_name(app_name))
-
-        return pretty_app_names
+        return {self.get_name(app_name) for app_name in self.get_app_names()}
