@@ -34,12 +34,12 @@ def confirm(question):
         return True
 
     while True:
-        answer = input(question + " <Yes|No> ").lower()
+        answer = input(f"{question} <Yes|No> ").lower()
 
-        if answer == "yes" or answer == "y":
+        if answer in ["yes", "y"]:
             confirmed = True
             break
-        if answer == "no" or answer == "n":
+        if answer in ["no", "n"]:
             confirmed = False
             break
 
@@ -100,13 +100,11 @@ def copy(src, dst):
         # Copy the src file to dst
         shutil.copy(src, dst)
 
-    # We need to copy a whole folder
     elif os.path.isdir(src):
         shutil.copytree(src, dst)
 
-    # What the heck is this?
     else:
-        raise ValueError("Unsupported file: {}".format(src))
+        raise ValueError(f"Unsupported file: {src}")
 
     # Set the good mode to the file or folder recursively
     chmod(dst)
@@ -178,7 +176,7 @@ def chmod(target):
                 os.chmod(os.path.join(root, cur_file), file_mode)
 
     else:
-        raise ValueError("Unsupported file type: {}".format(target))
+        raise ValueError(f"Unsupported file type: {target}")
 
 
 def error(message):
@@ -190,7 +188,7 @@ def error(message):
     """
     fail = "\033[91m"
     end = "\033[0m"
-    sys.exit(fail + "Error: {}".format(message) + end)
+    sys.exit(f"{fail}Error: {message}{end}")
 
 
 def get_dropbox_folder_location():
@@ -206,9 +204,7 @@ def get_dropbox_folder_location():
             data = f_hostdb.read().split()
     except IOError:
         error(constants.ERROR_UNABLE_TO_FIND_STORAGE.format(provider="Dropbox install"))
-    dropbox_home = base64.b64decode(data[1]).decode()
-
-    return dropbox_home
+    return base64.b64decode(data[1]).decode()
 
 
 def get_google_drive_folder_location():
@@ -230,8 +226,7 @@ def get_google_drive_folder_location():
 
     gdrive_db = os.path.join(os.environ["HOME"], gdrive_db_path)
     if os.path.isfile(gdrive_db):
-        con = sqlite3.connect(gdrive_db)
-        if con:
+        if con := sqlite3.connect(gdrive_db):
             cur = con.cursor()
             query = (
                 "SELECT data_value "
@@ -266,8 +261,7 @@ def get_copy_folder_location():
     copy_settings = os.path.join(os.environ["HOME"], copy_settings_path)
 
     if os.path.isfile(copy_settings):
-        database = sqlite3.connect(copy_settings)
-        if database:
+        if database := sqlite3.connect(copy_settings):
             cur = database.cursor()
             query = "SELECT value " "FROM config2 " "WHERE option = 'csmRootPath';"
             cur.execute(query)
@@ -314,7 +308,7 @@ def is_process_running(process_name):
     if os.path.isfile("/usr/bin/pgrep"):
         dev_null = open(os.devnull, "wb")
         returncode = subprocess.call(["/usr/bin/pgrep", process_name], stdout=dev_null)
-        is_running = bool(returncode == 0)
+        is_running = returncode == 0
 
     return is_running
 
