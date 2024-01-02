@@ -1,12 +1,11 @@
 name: Lint Python
 on:
-  push:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
   pull_request:
 
 jobs:
-
   black:
     runs-on: ubuntu-latest
     container: python

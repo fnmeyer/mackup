@@ -1,12 +1,11 @@
 name: Run tests
 on:
-  push:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
   pull_request:
 
 jobs:
-
   nose-2_7:
     runs-on: ubuntu-latest
     container: python:2.7

@@ -3,9 +3,9 @@
 # See <https://stackoverflow.com/a/729795>
 name: linelint
 on:
-  push:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
   pull_request:
 
 jobs:
