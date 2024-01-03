@@ -159,17 +159,7 @@ class Config(object):
         for old_section in old_sections:
             if self._parser.has_section(old_section):
                 error(
-                    "Old config file detected. Aborting.\n"
-                    "\n"
-                    "An old section (e.g. [Allowed Applications]"
-                    " or [Ignored Applications] has been detected"
-                    " in your {} file.\n"
-                    "I'd rather do nothing than do something you"
-                    " do not want me to do.\n"
-                    "\n"
-                    "Please read the up to date documentation on"
-                    " <https://github.com/lra/mackup> and migrate"
-                    " your configuration file.".format(MACKUP_CONFIG_FILE)
+                    f"Old config file detected. Aborting.\n\nAn old section (e.g. [Allowed Applications] or [Ignored Applications] has been detected in your {MACKUP_CONFIG_FILE} file.\nI'd rather do nothing than do something you do not want me to do.\n\nPlease read the up to date documentation on <https://github.com/lra/mackup> and migrate your configuration file."
                 )
 
     def _parse_engine(self):
@@ -192,7 +182,7 @@ class Config(object):
             ENGINE_ICLOUD,
             ENGINE_FS,
         ]:
-            raise ConfigError("Unknown storage engine: {}".format(engine))
+            raise ConfigError(f"Unknown storage engine: {engine}")
 
         return str(engine)
 
@@ -232,9 +222,7 @@ class Config(object):
             directory = self._parser.get("storage", "directory")
             # Don't allow CUSTOM_APPS_DIR as a storage directory
             if directory == CUSTOM_APPS_DIR:
-                raise ConfigError(
-                    "{} cannot be used as a storage directory.".format(CUSTOM_APPS_DIR)
-                )
+                raise ConfigError(f"{CUSTOM_APPS_DIR} cannot be used as a storage directory.")
         else:
             directory = MACKUP_BACKUP_PATH
 
@@ -247,15 +235,13 @@ class Config(object):
         Returns:
             set
         """
-        # We ignore nothing by default
-        apps_to_ignore = set()
-
         # Is the "[applications_to_ignore]" in the cfg file?
         section_title = "applications_to_ignore"
-        if self._parser.has_section(section_title):
-            apps_to_ignore = set(self._parser.options(section_title))
-
-        return apps_to_ignore
+        return (
+            set(self._parser.options(section_title))
+            if self._parser.has_section(section_title)
+            else set()
+        )
 
     def _parse_apps_to_sync(self):
         """
@@ -264,15 +250,13 @@ class Config(object):
         Returns:
             set
         """
-        # We allow nothing by default
-        apps_to_sync = set()
-
         # Is the "[applications_to_sync]" section in the cfg file?
         section_title = "applications_to_sync"
-        if self._parser.has_section(section_title):
-            apps_to_sync = set(self._parser.options(section_title))
-
-        return apps_to_sync
+        return (
+            set(self._parser.options(section_title))
+            if self._parser.has_section(section_title)
+            else set()
+        )
 
 
 class ConfigError(Exception):

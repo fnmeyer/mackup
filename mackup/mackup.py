@@ -38,9 +38,7 @@ class Mackup(object):
 
         # Do we have a folder set to save Mackup content into?
         if not os.path.isdir(self._config.path):
-            utils.error(
-                "Unable to find the storage folder: {}".format(self._config.path)
-            )
+            utils.error(f"Unable to find the storage folder: {self._config.path}")
 
         # Is Sublime Text running?
         # if is_process_running('Sublime Text'):
@@ -60,9 +58,7 @@ class Mackup(object):
 
         if not os.path.isdir(self.mackup_folder):
             utils.error(
-                "Unable to find the Mackup folder: {}\n"
-                "You might want to back up some files or get your"
-                " storage directory synced first.".format(self.mackup_folder)
+                f"Unable to find the Mackup folder: {self.mackup_folder}\nYou might want to back up some files or get your storage directory synced first."
             )
 
     def clean_temp_folder(self):
@@ -73,9 +69,7 @@ class Mackup(object):
         """If the Mackup home folder does not exist, create it."""
         if not os.path.isdir(self.mackup_folder):
             if utils.confirm(
-                "Mackup needs a directory to store your"
-                " configuration files\n"
-                "Do you want to create it now? <{}>".format(self.mackup_folder)
+                f"Mackup needs a directory to store your configuration files\nDo you want to create it now? <{self.mackup_folder}>"
             ):
                 os.makedirs(self.mackup_folder)
             else:
