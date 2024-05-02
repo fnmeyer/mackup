@@ -1,19 +1,22 @@
-import unittest
 import os.path
+import unittest
+from pathlib import Path
 
+import pytest
+
+from mackup.config import Config, ConfigError
 from mackup.constants import (
     ENGINE_DROPBOX,
+    ENGINE_FS,
     ENGINE_GDRIVE,
     ENGINE_ICLOUD,
-    ENGINE_FS,
 )
-from mackup.config import Config, ConfigError
 
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
-        realpath = os.path.dirname(os.path.realpath(__file__))
-        os.environ["HOME"] = os.path.join(realpath, "fixtures")
+        realpath = Path(os.path.realpath(__file__)).parent
+        os.environ["HOME"] = str(Path(realpath) / "fixtures")
 
     def test_config_no_config(self):
         cfg = Config()
@@ -97,15 +100,15 @@ class TestConfig(unittest.TestCase):
 
         assert isinstance(cfg.path, str)
         assert cfg.path.endswith(
-            os.path.join(os.environ["HOME"], "some/relative/folder")
+            str(Path(os.environ["HOME"]) / "some" / "relative" / "folder"),
         )
 
         assert isinstance(cfg.directory, str)
         assert cfg.directory == "Mackup"
 
         assert isinstance(cfg.fullpath, str)
-        assert cfg.fullpath == os.path.join(
-            os.environ["HOME"], "some/relative/folder", "Mackup"
+        assert cfg.fullpath == str(
+            Path(os.environ["HOME"]) / "some" / "relative" / "folder" / "Mackup",
         )
 
         assert cfg.apps_to_ignore == set()
@@ -136,9 +139,7 @@ class TestConfig(unittest.TestCase):
         assert cfg.engine == ENGINE_ICLOUD
 
         assert isinstance(cfg.path, str)
-        assert cfg.path == os.path.expanduser(
-            "~/Library/Mobile Documents/com~apple~CloudDocs/"
-        )
+        assert cfg.path == str(Path("~/Library/Mobile Documents/com~apple~CloudDocs/").expanduser())
 
         assert isinstance(cfg.directory, str)
         assert cfg.directory == "Mackup"
@@ -150,11 +151,11 @@ class TestConfig(unittest.TestCase):
         assert cfg.apps_to_sync == {"sublime-text-3", "x11", "sabnzbd"}
 
     def test_config_engine_filesystem_no_path(self):
-        with self.assertRaises(ConfigError):
+        with pytest.raises(ConfigError):
             Config("mackup-engine-file_system-no_path.cfg")
 
     def test_config_engine_unknown(self):
-        with self.assertRaises(ConfigError):
+        with pytest.raises(ConfigError):
             Config("mackup-engine-unknown.cfg")
 
     def test_config_apps_to_ignore(self):
@@ -212,4 +213,5 @@ class TestConfig(unittest.TestCase):
         assert cfg.apps_to_sync == {"sabnzbd", "sublime-text-3", "x11", "vim"}
 
     def test_config_old_config(self):
-        self.assertRaises(SystemExit, Config, "mackup-old-config.cfg")
+        with pytest.raises(SystemExit):
+            raise SystemExit(Config, "mackup-old-config.cfg")

@@ -6,21 +6,21 @@ data from the Mackup Database (files).
 """
 
 import os
+from pathlib import Path
 
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import ConfigParser as configparser  # noqa: N813
 
 
-from .constants import APPS_DIR
-from .constants import CUSTOM_APPS_DIR
+from mackup.constants import APPS_DIR, CUSTOM_APPS_DIR
 
 
-class ApplicationsDatabase(object):
+class ApplicationsDatabase:
     """Database containing all the configured applications."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a ApplicationsDatabase instance."""
         # Build the dict that will contain the properties of each application
         self.apps = {}
@@ -33,7 +33,7 @@ class ApplicationsDatabase(object):
 
             if config.read(config_file):
                 # Get the filename without the directory name
-                filename = os.path.basename(config_file)
+                filename = str(Path(config_file).name)
                 # The app name is the cfg filename with the extension
                 app_name = filename[: -len(".cfg")]
 
@@ -49,33 +49,32 @@ class ApplicationsDatabase(object):
                 if config.has_section("configuration_files"):
                     for path in config.options("configuration_files"):
                         if path.startswith("/"):
-                            raise ValueError(
-                                "Unsupported absolute path: {}".format(path)
-                            )
+                            msg = f"Unsupported absolute path: {path}"
+                            raise ValueError(msg)
                         self.apps[app_name]["configuration_files"].add(path)
 
                 # Add the XDG configuration files to sync
-                home = os.path.expanduser("~/")
-                failobj = "{}.config".format(home)
+                home = str(Path("~/").expanduser())
+                failobj = f"{home}.config"
                 xdg_config_home = os.environ.get("XDG_CONFIG_HOME", failobj)
                 if not xdg_config_home.startswith(home):
-                    raise ValueError(
-                        "$XDG_CONFIG_HOME: {} must be "
+                    msg = (
+                        f"$XDG_CONFIG_HOME: {xdg_config_home} must be "
                         "somewhere within your home "
-                        "directory: {}".format(xdg_config_home, home)
+                        f"directory: {home}"
                     )
+                    raise ValueError(msg)
                 if config.has_section("xdg_configuration_files"):
                     for path in config.options("xdg_configuration_files"):
                         if path.startswith("/"):
-                            raise ValueError(
-                                "Unsupported absolute path: " "{}".format(path)
-                            )
-                        path = os.path.join(xdg_config_home, path)
-                        path = path.replace(home, "")
+                            msg = f"Unsupported absolute path: {path}"
+                            raise ValueError(msg)
+                        path = str(Path(xdg_config_home) / path)  # noqa: PLW2901
+                        path = path.replace(home, "")  # noqa: PLW2901
                         (self.apps[app_name]["configuration_files"].add(path))
 
     @staticmethod
-    def get_config_files():
+    def get_config_files() -> set[str]:
         """
         Return the application configuration files.
 
@@ -90,8 +89,8 @@ class ApplicationsDatabase(object):
             set of strings.
         """
         # Configure the config parser
-        apps_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), APPS_DIR)
-        custom_apps_dir = os.path.join(os.environ["HOME"], CUSTOM_APPS_DIR)
+        apps_dir = str(Path(Path(os.path.realpath(__file__)).parent / APPS_DIR))
+        custom_apps_dir = str(Path(os.environ["HOME"]) / CUSTOM_APPS_DIR)
 
         # List of stock application config files
         config_files = set()
@@ -100,10 +99,10 @@ class ApplicationsDatabase(object):
         custom_files = set()
 
         # Get the list of custom application config files first
-        if os.path.isdir(custom_apps_dir):
+        if Path(custom_apps_dir).is_dir():
             for filename in os.listdir(custom_apps_dir):
                 if filename.endswith(".cfg"):
-                    config_files.add(os.path.join(custom_apps_dir, filename))
+                    config_files.add(str(Path(custom_apps_dir) / filename))
                     # Also add it to the set of custom apps, so that we don't
                     # add the stock config for the same app too
                     custom_files.add(filename)
@@ -112,11 +111,11 @@ class ApplicationsDatabase(object):
         # customized, as we don't want to overwrite custom app config.
         for filename in os.listdir(apps_dir):
             if filename.endswith(".cfg") and filename not in custom_files:
-                config_files.add(os.path.join(apps_dir, filename))
+                config_files.add(str(Path(apps_dir) / filename))
 
         return config_files
 
-    def get_name(self, name):
+    def get_name(self, name: str) -> str:
         """
         Return the fancy name of an application.
 
@@ -128,7 +127,7 @@ class ApplicationsDatabase(object):
         """
         return self.apps[name]["name"]
 
-    def get_files(self, name):
+    def get_files(self, name: set) -> set[str]:
         """
         Return the list of config files of an application.
 
@@ -140,7 +139,7 @@ class ApplicationsDatabase(object):
         """
         return self.apps[name]["configuration_files"]
 
-    def get_app_names(self):
+    def get_app_names(self) -> set[str]:
         """
         Return application names.
 
@@ -152,7 +151,7 @@ class ApplicationsDatabase(object):
         """
         return set(self.apps)
 
-    def get_pretty_app_names(self):
+    def get_pretty_app_names(self) -> set[str]:
         """
         Return the list of pretty app names that are available in the database.
 

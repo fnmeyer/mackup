@@ -2,18 +2,19 @@
 
 import os
 import os.path
+from configparser import ConfigParser
+from pathlib import Path
 
-from .constants import (
+from mackup.constants import (
     CUSTOM_APPS_DIR,
-    MACKUP_BACKUP_PATH,
-    MACKUP_CONFIG_FILE,
     ENGINE_DROPBOX,
+    ENGINE_FS,
     ENGINE_GDRIVE,
     ENGINE_ICLOUD,
-    ENGINE_FS,
+    MACKUP_BACKUP_PATH,
+    MACKUP_CONFIG_FILE,
 )
-
-from .utils import (
+from mackup.utils import (
     error,
     get_dropbox_folder_location,
     get_google_drive_folder_location,
@@ -23,13 +24,13 @@ from .utils import (
 try:
     import configparser
 except ImportError:
-    import ConfigParser as configparser
+    import ConfigParser as configparser  # noqa: N813
 
 
-class Config(object):
+class Config:
     """The Mackup Config class."""
 
-    def __init__(self, filename=None):
+    def __init__(self, filename: str | None = None) -> None:
         """
         Create a Config instance.
 
@@ -61,7 +62,7 @@ class Config(object):
         self._apps_to_sync = self._parse_apps_to_sync()
 
     @property
-    def engine(self):
+    def engine(self) -> str:
         """
         The engine used by the storage.
 
@@ -73,7 +74,7 @@ class Config(object):
         return str(self._engine)
 
     @property
-    def path(self):
+    def path(self) -> str:
         """
         Path to the Mackup configuration files.
 
@@ -86,7 +87,7 @@ class Config(object):
         return str(self._path)
 
     @property
-    def directory(self):
+    def directory(self) -> str:
         """
         The name of the Mackup directory, named Mackup by default.
 
@@ -96,7 +97,7 @@ class Config(object):
         return str(self._directory)
 
     @property
-    def fullpath(self):
+    def fullpath(self) -> str:
         """
         Full path to the Mackup configuration files.
 
@@ -106,10 +107,10 @@ class Config(object):
         Returns:
             str
         """
-        return str(os.path.join(self.path, self.directory))
+        return str(Path(self.path) / self.directory)
 
     @property
-    def apps_to_ignore(self):
+    def apps_to_ignore(self) -> set:
         """
         Get the list of applications ignored in the config file.
 
@@ -119,7 +120,7 @@ class Config(object):
         return set(self._apps_to_ignore)
 
     @property
-    def apps_to_sync(self):
+    def apps_to_sync(self) -> set:
         """
         Get the list of applications allowed in the config file.
 
@@ -128,7 +129,7 @@ class Config(object):
         """
         return set(self._apps_to_sync)
 
-    def _setup_parser(self, filename=None):
+    def _setup_parser(self, filename: str | None = None) -> ConfigParser:  # noqa: PLR6301
         """
         Configure the ConfigParser instance the way we want it.
 
@@ -144,34 +145,34 @@ class Config(object):
         if not filename:
             filename = MACKUP_CONFIG_FILE
 
-        parser = configparser.ConfigParser(
-            allow_no_value=True, inline_comment_prefixes=(";", "#")
-        )
-        parser.read(os.path.join(os.path.join(os.environ["HOME"], filename)))
+        parser = configparser.ConfigParser(allow_no_value=True, inline_comment_prefixes=(";", "#"))
+        parser.read(str(Path(os.environ["HOME"]) / filename))
 
         return parser
 
-    def _warn_on_old_config(self):
+    def _warn_on_old_config(self) -> None:
         """Warn the user if an old config format is detected."""
         # Is an old section in the config file?
         old_sections = ["Allowed Applications", "Ignored Applications"]
         for old_section in old_sections:
             if self._parser.has_section(old_section):
                 error(
-                    "Old config file detected. Aborting.\n"
-                    "\n"
-                    "An old section (e.g. [Allowed Applications]"
-                    " or [Ignored Applications] has been detected"
-                    " in your {} file.\n"
-                    "I'd rather do nothing than do something you"
-                    " do not want me to do.\n"
-                    "\n"
-                    "Please read the up to date documentation on"
-                    " <https://github.com/lra/mackup> and migrate"
-                    " your configuration file.".format(MACKUP_CONFIG_FILE)
+                    (
+                        "Old config file detected. Aborting.\n"
+                        "\n"
+                        "An old section (e.g. [Allowed Applications]"
+                        " or [Ignored Applications] has been detected"
+                        f" in your {MACKUP_CONFIG_FILE} file.\n"
+                        "I'd rather do nothing than do something you"
+                        " do not want me to do.\n"
+                        "\n"
+                        "Please read the up to date documentation on"
+                        " <https://github.com/lra/mackup> and migrate"
+                        " your configuration file."
+                    ),
                 )
 
-    def _parse_engine(self):
+    def _parse_engine(self) -> str:
         """
         Parse the storage engine in the config.
 
@@ -185,23 +186,25 @@ class Config(object):
 
         assert isinstance(engine, str)
 
-        if engine not in [
+        if engine not in {
             ENGINE_DROPBOX,
             ENGINE_GDRIVE,
             ENGINE_ICLOUD,
             ENGINE_FS,
-        ]:
-            raise ConfigError("Unknown storage engine: {}".format(engine))
+        }:
+            msg = f"Unknown storage engine: {engine}"
+            raise ConfigError(msg)
 
         return str(engine)
 
-    def _parse_path(self):
+    def _parse_path(self) -> str:
         """
         Parse the storage path in the config.
 
         Returns:
             str
         """
+        path = ""
         if self.engine == ENGINE_DROPBOX:
             path = get_dropbox_folder_location()
         elif self.engine == ENGINE_GDRIVE:
@@ -211,16 +214,14 @@ class Config(object):
         elif self.engine == ENGINE_FS:
             if self._parser.has_option("storage", "path"):
                 cfg_path = self._parser.get("storage", "path")
-                path = os.path.join(os.environ["HOME"], cfg_path)
+                path = Path(os.environ["HOME"]) / cfg_path
             else:
-                raise ConfigError(
-                    "The required 'path' can't be found while"
-                    " the 'file_system' engine is used."
-                )
+                msg = "The required 'path' can't be found while the 'file_system' engine is used."
+                raise ConfigError(msg)
 
         return str(path)
 
-    def _parse_directory(self):
+    def _parse_directory(self) -> str:
         """
         Parse the storage directory in the config.
 
@@ -231,15 +232,14 @@ class Config(object):
             directory = self._parser.get("storage", "directory")
             # Don't allow CUSTOM_APPS_DIR as a storage directory
             if directory == CUSTOM_APPS_DIR:
-                raise ConfigError(
-                    "{} cannot be used as a storage directory.".format(CUSTOM_APPS_DIR)
-                )
+                msg = f"{CUSTOM_APPS_DIR} cannot be used as a storage directory."
+                raise ConfigError(msg)
         else:
             directory = MACKUP_BACKUP_PATH
 
         return str(directory)
 
-    def _parse_apps_to_ignore(self):
+    def _parse_apps_to_ignore(self) -> set:
         """
         Parse the applications to ignore in the config.
 
@@ -248,13 +248,9 @@ class Config(object):
         """
         # Is the "[applications_to_ignore]" in the cfg file?
         section_title = "applications_to_ignore"
-        return (
-            set(self._parser.options(section_title))
-            if self._parser.has_section(section_title)
-            else set()
-        )
+        return set(self._parser.options(section_title)) if self._parser.has_section(section_title) else set()
 
-    def _parse_apps_to_sync(self):
+    def _parse_apps_to_sync(self) -> set:
         """
         Parse the applications to backup in the config.
 
@@ -263,14 +259,8 @@ class Config(object):
         """
         # Is the "[applications_to_sync]" section in the cfg file?
         section_title = "applications_to_sync"
-        return (
-            set(self._parser.options(section_title))
-            if self._parser.has_section(section_title)
-            else set()
-        )
+        return set(self._parser.options(section_title)) if self._parser.has_section(section_title) else set()
 
 
 class ConfigError(Exception):
     """Exception used for handle errors in the configuration."""
-
-    pass

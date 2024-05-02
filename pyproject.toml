@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 docopt = "^0.6.2"
+pytest-watch = "^4.2.0"
 
 [tool.poetry.group.dev]
 optional = true
@@ -22,3 +23,136 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 mackup = "mackup.main:main"
+
+[tool.ruff]
+line-length = 120
+output-format = "grouped"
+preview = true
+target-version = "py311"
+src = ["src", "tests"]
+# extend-exclude = ["typings"]
+# force-exclude = true
+
+[tool.ruff.lint]
+select = [
+  "F",     # Pyflakes
+  "E",     # pycodestyle-Error
+  "W",     # pycodestyle- Warning
+  "C90",   # mccabe
+  "I",     # isort
+  "N",     # pep8-naming
+  "D",     # pydocstyle
+  "UP",    # pyupgrade
+  "YTT",   # flake8-2020
+  "ANN",   # flake8-annotations
+  "ASYNC", # flake8-async
+  "TRIO",  # flake8-trio
+  "S",     # flake8-bandit
+  "BLE",   # flake8-blind-except
+  "FBT",   # flake8-boolean-trap
+  "B",     # flake8-bugbear
+  "A",     # flake8-builtins
+  "COM",   # flake8-commas
+  # "CPY",   # flake8-copyright #
+  "C4",  # flake8-comprehensions
+  "DTZ", # flake8-datetimez
+  "T10", # flake8-debugger
+  "DJ",  # flake8-django
+  "EM",  # flake8-errmsg
+  "EXE", # flake8-executable
+  "FA",  # flake8-future-annotations
+  "ISC", # flake8-implicit-str-concat
+  "ICN", # flake8-import-conventions
+  "G",   # flake8-logging-format
+  "INP", # flake8-no-pep420
+  "PIE", # flake8-pie
+  # "T20",  # flake8-print
+  "PYI",  # flake8-pyi
+  "PT",   # flake8-pytest-style
+  "Q",    # flake8-quotes
+  "RSE",  # flake8-raise
+  "RET",  # flake8-return
+  "SLF",  # flake8-self
+  "SLOT", # flake8-slots
+  "SIM",  # flake8-simplify
+  "TID",  # flake8-tidy-imports
+  "TCH",  # flake8-type-checking
+  "INT",  # flake8-gettext
+  "ARG",  # flake8-unused-arguments
+  "PTH",  # flake8-use-pathlib
+  # "TD",   # flake8-todos #
+  # "FIX",  # flake8-fixme #
+  # "ERA",  # eradicate #
+  "PD",   # pandas-vet
+  "PGH",  # pygrep-hooks
+  "PL",   # Pylint  # "PLR", # Pylint-Refactor # "PLE", # Pylint-Error
+  "TRY",  # tryceratops
+  "FLY",  # flynt
+  "NPY",  # NumPy-specific rules
+  "AIR",  # Airflow
+  "PERF", # Perflint
+  "FURB", # refurb
+  "LOG",  # flake8-logging
+  "RUF",  # Ruff-specific rules
+]
+
+ignore = [
+  "ANN101", # Allow missing type annotation for `self` in method
+  "C901",   # Ignore complexity
+  "D107",   # Ignore missing docstring for init functions
+]
+
+unfixable = [
+  "F401", # Don't touch unused imports
+]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.extend-per-file-ignores]
+# Init files: ignore missing docstring and unused imports
+# undocumented-public-package, unused-import
+"__init__.py" = ["D104", "F401"]
+"**/{mackup}/*" = ["S101"]
+# Tests can use magic values, assertions, and relative imports
+"**/{tests,docs,tools}/*" = [
+  "ANN001",  # Missing type for function argument
+  "ANN201",  # Missing return type in public function
+  "ANN202",  # Missing return type in private function
+  "D100",    # Missing docstring in public module
+  "D101",    # Missing docstring in public class
+  "D102",    # Missing docstring in public method
+  "D104",    # Missing docstring in public package
+  "E402",    # module level import not at top of file
+  "PLR2004", # Magic value used in comparison
+  "PLR6301", # no-self-use, is it function, class method, or static method
+  "S",       # flake8-bandit
+  "TID252",  # relative-imports
+]
+"**/{typings}/*" = [
+  "D",       # pydocstyle
+  "N",       # pep8-naming
+  "PL",      # Pylint
+  "A002",    # shadowing a python builtin
+  "E501",    # line too long
+  "E741",    # Ambiguous variable name
+  "F821",    # Undefined name `Self`
+  "PYI021",  # docstrings should not be included in stubs
+  "PYI048",  # function body must contain exactly one statement
+  "PYI058",  # Iterator as the return value for simple __iter__ methods
+  "SLOT000", # str Subclasses should define `__slots__`
+  "SLOT001", # tuple Subclasses should define `__slots__`
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+known-first-party = ["mackup"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"

@@ -34,9 +34,9 @@ DOCUMENTATION_URL = "https://github.com/lra/mackup/blob/master/doc/README.md"
 # in the config (or the default one).
 ERROR_UNABLE_TO_FIND_STORAGE = (
     "Unable to find your {provider} =(\n"
-    "If this is the first time you use %s, you may want "
+    f"If this is the first time you use {MACKUP_APP_NAME}, you may want "
     "to use another provider.\n"
     "Take a look at the documentation [1] to know more about "
     "how to configure mackup.\n\n"
-    "[1]: %s" % (MACKUP_APP_NAME, DOCUMENTATION_URL)
+    f"[1]: {DOCUMENTATION_URL}"
 )

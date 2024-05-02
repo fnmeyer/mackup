@@ -1,18 +1,18 @@
 import os
+import stat
 import tempfile
 import unittest
-import stat
+from pathlib import Path
+
+import pytest
 
 # from unittest.mock import patch
-
 from mackup import utils
 
 
 def convert_to_octal(file_name):
-    """
-    Using os.stat, returns file permissions (read, write, execute) as an octal.
-    """
-    return oct(os.stat(file_name)[stat.ST_MODE])[-3:]
+    """Use os.stat; returns file permissions (read, write, execute) as an octal."""
+    return oct(Path(file_name).stat()[stat.ST_MODE])[-3:]
 
 
 class TestMackup(unittest.TestCase):
@@ -47,11 +47,11 @@ class TestMackup(unittest.TestCase):
         tfile.close()
 
         # Make sure the created file exists
-        assert os.path.isfile(tfpath)
+        assert Path(tfpath).is_file()
 
         # Check if mackup can really delete it
         utils.delete(tfpath)
-        assert not os.path.exists(tfpath)
+        assert not Path(tfpath).exists()
 
     def test_delete_folder_recursively(self):
         # Create a tmp folder
@@ -71,19 +71,19 @@ class TestMackup(unittest.TestCase):
         tfile.close()
 
         # Make sure the created files and folders exists
-        assert os.path.isdir(tfpath)
-        assert os.path.isfile(filepath)
-        assert os.path.isdir(subfolder_path)
-        assert os.path.isfile(subfilepath)
+        assert Path(tfpath).is_dir()
+        assert Path(filepath).is_file()
+        assert Path(subfolder_path).is_dir()
+        assert Path(subfilepath).is_file()
 
         # Check if mackup can really delete it
         utils.delete(tfpath)
-        assert not os.path.exists(tfpath)
-        assert not os.path.exists(filepath)
-        assert not os.path.exists(subfolder_path)
-        assert not os.path.exists(subfilepath)
+        assert not Path(tfpath).exists()
+        assert not Path(filepath).exists()
+        assert not Path(subfolder_path).exists()
+        assert not Path(subfilepath).exists()
 
-    def test_copy_file(self):
+    def test_copy_file(self):  # sourcery skip: class-extract-method
         # Create a tmp file
         tfile = tempfile.NamedTemporaryFile(delete=False)
         srcfile = tfile.name
@@ -92,24 +92,24 @@ class TestMackup(unittest.TestCase):
         # Create a tmp folder
         dstpath = tempfile.mkdtemp()
         # Set the destination filename
-        dstfile = os.path.join(dstpath, "subfolder", os.path.basename(srcfile))
+        dstfile = str(Path(dstpath) / "subfolder" / Path(srcfile).name)
 
         # Make sure the source file and destination folder exist and the
         # destination file doesn't yet exist
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Check if mackup can copy it
         utils.copy(srcfile, dstfile)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert os.path.exists(dstfile)
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert Path(dstfile).exists()
 
         # Let's clean up
         utils.delete(dstpath)
 
-    def test_copy_fail(self):
+    def test_copy_fail(self):  # sourcery skip: extract-duplicate-method
         # Create a tmp FIFO file
         tfile = tempfile.NamedTemporaryFile()
         srcfile = tfile.name
@@ -119,27 +119,28 @@ class TestMackup(unittest.TestCase):
         # Create a tmp folder
         dstpath = tempfile.mkdtemp()
         # Set the destination filename
-        dstfile = os.path.join(dstpath, "subfolder", os.path.basename(srcfile))
+        dstfile = str(Path(dstpath) / "subfolder" / Path(srcfile).name)
 
         # Make sure the source file and destination folder exist and the
         # destination file doesn't yet exist
-        assert not os.path.isfile(srcfile)
-        assert stat.S_ISFIFO(os.stat(srcfile).st_mode)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        assert not Path(srcfile).is_file()
+        assert stat.S_ISFIFO(Path(srcfile).stat().st_mode)
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Check if mackup can copy it
-        self.assertRaises(ValueError, utils.copy, srcfile, dstfile)
-        assert not os.path.isfile(srcfile)
-        assert stat.S_ISFIFO(os.stat(srcfile).st_mode)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        with pytest.raises(ValueError, match="function copy"):
+            raise ValueError(utils.copy, srcfile, dstfile)
+        assert not Path(srcfile).is_file()
+        assert stat.S_ISFIFO(Path(srcfile).stat().st_mode)
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Let's clean up
         utils.delete(srcfile)
         utils.delete(dstpath)
 
-    def test_copy_file_to_dir(self):
+    def test_copy_file_to_dir(self):  # sourcery skip: extract-duplicate-method
         """Copies a file to a destination folder that already exists."""
         # Create a tmp folder
         srcpath = tempfile.mkdtemp()
@@ -153,29 +154,29 @@ class TestMackup(unittest.TestCase):
         dstpath = tempfile.mkdtemp()
 
         # Set the destination filename
-        srcpath_basename = os.path.basename(srcpath)
-        dstfile = os.path.join(
-            dstpath, "subfolder", srcpath_basename, os.path.basename(srcfile)
+        srcpath_basename = Path(srcpath).name
+        dstfile = str(
+            Path(dstpath) / "subfolder" / srcpath_basename / Path(srcfile).name,
         )
         # Make sure the source file and destination folder exist and the
         # destination file doesn't yet exist
-        assert os.path.isdir(srcpath)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        assert Path(srcpath).is_dir()
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Check if mackup can copy it
         utils.copy(srcfile, dstfile)
-        assert os.path.isdir(srcpath)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert os.path.exists(dstfile)
+        assert Path(srcpath).is_dir()
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert Path(dstfile).exists()
 
         # Let's clean up
         utils.delete(srcpath)
         utils.delete(dstpath)
 
-    def test_copy_dir(self):
+    def test_copy_dir(self):  # sourcery skip: extract-duplicate-method
         """Copies a directory recursively to the destination path."""
         # Create a tmp folder
         srcpath = tempfile.mkdtemp()
@@ -189,21 +190,21 @@ class TestMackup(unittest.TestCase):
         dstpath = tempfile.mkdtemp()
 
         # Set the destination filename
-        srcpath_basename = os.path.basename(srcpath)
-        dstfile = os.path.join(dstpath, srcpath_basename, os.path.basename(srcfile))
+        srcpath_basename = Path(srcpath).name
+        dstfile = str(Path(dstpath) / srcpath_basename / Path(srcfile).name)
         # Make sure the source file and destination folder exist and the
         # destination file doesn't yet exist
-        assert os.path.isdir(srcpath)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        assert Path(srcpath).is_dir()
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Check if mackup can copy it
         utils.copy(srcpath, dstfile)
-        assert os.path.isdir(srcpath)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert os.path.exists(dstfile)
+        assert Path(srcpath).is_dir()
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert Path(dstfile).exists()
 
         # Let's clean up
         utils.delete(srcpath)
@@ -218,20 +219,20 @@ class TestMackup(unittest.TestCase):
         # Create a tmp folder
         dstpath = tempfile.mkdtemp()
         # Set the destination filename
-        dstfile = os.path.join(dstpath, "subfolder", os.path.basename(srcfile))
+        dstfile = str(Path(dstpath) / "subfolder" / Path(srcfile).name)
 
         # Make sure the source file and destination folder exist and the
         # destination file doesn't yet exist
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert not os.path.exists(dstfile)
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert not Path(dstfile).exists()
 
         # Check if mackup can link it and the link points to the correct place
         utils.link(srcfile, dstfile)
-        assert os.path.isfile(srcfile)
-        assert os.path.isdir(dstpath)
-        assert os.path.exists(dstfile)
-        assert os.readlink(dstfile) == srcfile
+        assert Path(srcfile).is_file()
+        assert Path(dstpath).is_dir()
+        assert Path(dstfile).exists()
+        assert str(Path(dstfile).readlink()) == srcfile
 
         # Let's clean up
         utils.delete(dstpath)
@@ -248,7 +249,7 @@ class TestMackup(unittest.TestCase):
         # # File Tests
 
         # Change the tmp file stats to S_IWRITE (200), write access only
-        os.chmod(file_name, stat.S_IWRITE)
+        Path(file_name).chmod(stat.S_IWRITE)
         assert convert_to_octal(file_name) == "200"
 
         # Check to make sure that utils.chmod changes the bits to 600,
@@ -259,7 +260,7 @@ class TestMackup(unittest.TestCase):
         # # Directory Tests
 
         # Change the tmp folder stats to S_IREAD (400), read access only
-        os.chmod(dir_name, stat.S_IREAD)
+        Path(dir_name).chmod(stat.S_IREAD)
         assert convert_to_octal(dir_name) == "400"
 
         # Check to make sure that utils.chmod changes the bits of all
@@ -270,32 +271,31 @@ class TestMackup(unittest.TestCase):
         assert convert_to_octal(nested_dir) == "700"
 
         # Use an "unsupported file type". In this case, /dev/null
-        self.assertRaises(ValueError, utils.chmod, os.devnull)
+        with pytest.raises(ValueError, match="/dev/null"):
+            raise ValueError(utils.chmod, os.devnull)
 
     def test_error(self):
         test_string = "Hello World"
-        self.assertRaises(SystemExit, utils.error, test_string)
+        with pytest.raises(SystemExit):
+            raise SystemExit(utils.error, test_string)
 
     def test_failed_backup_location(self):
-        """
-        Tests for the error that should occur if the backup folder cannot be
-        found for Dropbox and Google
-        """
+        """Tests for the error that should occur if the backup folder cannot be found for Dropbox and Google."""
         # Hack to make our home folder some temporary folder
         temp_home = tempfile.mkdtemp()
         utils.os.environ["HOME"] = temp_home
 
         # Check for the missing Dropbox folder
-        assert not os.path.exists(os.path.join(temp_home, ".dropbox/host.db"))
-        self.assertRaises(SystemExit, utils.get_dropbox_folder_location)
+        assert not (Path(temp_home) / ".dropbox" / "host.db").exists()
+        with pytest.raises(SystemExit):
+            raise SystemExit(utils.get_dropbox_folder_location)
 
         # Check for the missing Google Drive folder
-        assert not os.path.exists(
-            os.path.join(
-                temp_home, "Library/Application Support/Google/Drive/sync_config.db"
-            )
-        )
-        self.assertRaises(SystemExit, utils.get_google_drive_folder_location)
+        assert not (
+            Path(temp_home) / "Library" / "Application Support" / "Google" / "Drive" / "sync_config.db"
+        ).exists()
+        with pytest.raises(SystemExit):
+            raise SystemExit(utils.get_google_drive_folder_location)
 
     def test_is_process_running(self):
         # A pgrep that has one letter and a wildcard will always return id 1
@@ -307,13 +307,13 @@ class TestMackup(unittest.TestCase):
         path = "some/file"
 
         # Force the Mac OSX Test using lambda magic
-        utils.platform.system = lambda *args: utils.constants.PLATFORM_DARWIN
+        utils.platform.system = lambda *args: utils.constants.PLATFORM_DARWIN  # noqa: ARG005
         assert utils.can_file_be_synced_on_current_platform(path)
 
         # Force the Linux Test using lambda magic
-        utils.platform.system = lambda *args: utils.constants.PLATFORM_LINUX
+        utils.platform.system = lambda *args: utils.constants.PLATFORM_LINUX  # noqa: ARG005
         assert utils.can_file_be_synced_on_current_platform(path)
 
         # Try to use the library path on Linux, which shouldn't work
-        path = os.path.join(os.environ["HOME"], "Library/")
+        path = str(Path(os.environ["HOME"]) / "Library")
         assert not utils.can_file_be_synced_on_current_platform(path)
