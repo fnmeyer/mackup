@@ -246,15 +246,13 @@ class Config(object):
         Returns:
             set
         """
-        # We ignore nothing by default
-        apps_to_ignore = set()
-
         # Is the "[applications_to_ignore]" in the cfg file?
         section_title = "applications_to_ignore"
-        if self._parser.has_section(section_title):
-            apps_to_ignore = set(self._parser.options(section_title))
-
-        return apps_to_ignore
+        return (
+            set(self._parser.options(section_title))
+            if self._parser.has_section(section_title)
+            else set()
+        )
 
     def _parse_apps_to_sync(self):
         """
@@ -263,15 +261,13 @@ class Config(object):
         Returns:
             set
         """
-        # We allow nothing by default
-        apps_to_sync = set()
-
         # Is the "[applications_to_sync]" section in the cfg file?
         section_title = "applications_to_sync"
-        if self._parser.has_section(section_title):
-            apps_to_sync = set(self._parser.options(section_title))
-
-        return apps_to_sync
+        return (
+            set(self._parser.options(section_title))
+            if self._parser.has_section(section_title)
+            else set()
+        )
 
 
 class ConfigError(Exception):

@@ -23,7 +23,7 @@ class ApplicationsDatabase(object):
     def __init__(self):
         """Create a ApplicationsDatabase instance."""
         # Build the dict that will contain the properties of each application
-        self.apps = dict()
+        self.apps = {}
 
         for config_file in ApplicationsDatabase.get_config_files():
             config = configparser.ConfigParser(allow_no_value=True)
@@ -38,7 +38,7 @@ class ApplicationsDatabase(object):
                 app_name = filename[: -len(".cfg")]
 
                 # Start building a dict for this app
-                self.apps[app_name] = dict()
+                self.apps[app_name] = {}
 
                 # Add the fancy name for the app, for display purpose
                 app_pretty_name = config.get("application", "name")
@@ -150,11 +150,7 @@ class ApplicationsDatabase(object):
         Returns:
             set of str.
         """
-        app_names = set()
-        for name in self.apps:
-            app_names.add(name)
-
-        return app_names
+        return set(self.apps)
 
     def get_pretty_app_names(self):
         """
@@ -163,8 +159,4 @@ class ApplicationsDatabase(object):
         Returns:
             set of str.
         """
-        pretty_app_names = set()
-        for app_name in self.get_app_names():
-            pretty_app_names.add(self.get_name(app_name))
-
-        return pretty_app_names
+        return {self.get_name(app_name) for app_name in self.get_app_names()}

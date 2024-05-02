@@ -36,10 +36,10 @@ def confirm(question):
     while True:
         answer = input(question + " <Yes|No> ").lower()
 
-        if answer == "yes" or answer == "y":
+        if answer in ["yes", "y"]:
             confirmed = True
             break
-        if answer == "no" or answer == "n":
+        if answer in ["no", "n"]:
             confirmed = False
             break
 
@@ -206,9 +206,7 @@ def get_dropbox_folder_location():
             data = f_hostdb.read().split()
     except IOError:
         error(constants.ERROR_UNABLE_TO_FIND_STORAGE.format(provider="Dropbox install"))
-    dropbox_home = base64.b64decode(data[1]).decode()
-
-    return dropbox_home
+    return base64.b64decode(data[1]).decode()
 
 
 def get_google_drive_folder_location():
@@ -286,7 +284,7 @@ def is_process_running(process_name):
     if os.path.isfile("/usr/bin/pgrep"):
         dev_null = open(os.devnull, "wb")
         returncode = subprocess.call(["/usr/bin/pgrep", process_name], stdout=dev_null)
-        is_running = bool(returncode == 0)
+        is_running = returncode == 0
 
     return is_running
 
@@ -352,8 +350,6 @@ def can_file_be_synced_on_current_platform(path):
     Returns:
         (bool): True if given file can be synced
     """
-    can_be_synced = True
-
     # If the given path is relative, prepend home
     fullpath = os.path.join(os.environ["HOME"], path)
 
@@ -362,8 +358,7 @@ def can_file_be_synced_on_current_platform(path):
     # not any file/folder named LibrarySomething
     library_path = os.path.join(os.environ["HOME"], "Library/")
 
-    if platform.system() == constants.PLATFORM_LINUX:
-        if fullpath.startswith(library_path):
-            can_be_synced = False
-
-    return can_be_synced
+    return (
+        platform.system() != constants.PLATFORM_LINUX
+        or not fullpath.startswith(library_path)
+    )
